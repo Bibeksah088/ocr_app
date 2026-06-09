@@ -97,7 +97,7 @@ class ImagePreprocessor:
         t = cv2.morphologyEx(t, cv2.MORPH_CLOSE, kern)
         return cv2.cvtColor(t, cv2.COLOR_GRAY2BGR)
 
-      _MAP = {
+    _MAP = {
         "None (Original)": none_mode,
         "Grayscale": grayscale,
         "Adaptive Threshold": adaptive_threshold,
