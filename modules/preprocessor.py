@@ -97,20 +97,21 @@ class ImagePreprocessor:
         t = cv2.morphologyEx(t, cv2.MORPH_CLOSE, kern)
         return cv2.cvtColor(t, cv2.COLOR_GRAY2BGR)
 
-    _MAP = {
-        "None (Original)": none_mode.__func__,
-        "Grayscale": grayscale.__func__,
-        "Adaptive Threshold": adaptive_threshold.__func__,
-        "OTSU Threshold": otsu_threshold.__func__,
-        "Denoise": denoise.__func__,
-        "Sharpen": sharpen.__func__,
-        "Contrast Enhance": contrast_enhance.__func__,
-        "Deskew": deskew.__func__,
-        "Full Pipeline (Recommended)": full_pipeline.__func__,
-    }
+   _MAP = {
+    "None (Original)": none_mode,
+    "Grayscale": grayscale,
+    "Adaptive Threshold": adaptive_threshold,
+    "OTSU Threshold": otsu_threshold,
+    "Denoise": denoise,
+    "Sharpen": sharpen,
+    "Contrast Enhance": contrast_enhance,
+    "Deskew": deskew,
+    "Full Pipeline (Recommended)": full_pipeline,
+}
 
-    @classmethod
-    def process(cls, img, mode):
-        fn = cls._MAP.get(mode, cls.none_mode.__func__)
-        result = fn(img)
-        return cls._to_pil(result)
+
+   @classmethod
+def process(cls, img, mode):
+    fn = cls._MAP.get(mode, cls.none_mode)
+    result = fn(img)
+    return cls._to_pil(result)
