@@ -1,0 +1,9 @@
+streamlit>=1.32.0
+pytesseract>=0.3.10
+opencv-python>=4.9.0.80
+Pillow>=10.2.0
+numpy>=1.26.4
+pandas>=2.2.1
+fpdf2>=2.7.9
+streamlit-webrtc>=0.47.1
+av>=11.0.0
