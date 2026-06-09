@@ -349,16 +349,24 @@ with t1:
             st.warning("No text detected. Try changing the preprocessing mode or PSM setting.")
 
         # Word confidence table
-        words = OCREngine.get_word_stats(data, conf_thresh)
-        if words:
-            with st.expander("📋 Word-level Confidence Analysis"):
-                df_w = pd.DataFrame(words).sort_values("confidence", ascending=False)
-                st.dataframe(
-                    df_w.style.background_gradient(subset=["confidence"], cmap="RdYlGn"),
-                    use_container_width=True,
-                    height=260,
-                    hide_index=True,
-                )
+      
+words = OCREngine.get_word_stats(data, conf_thresh)
+if words:
+    with st.expander("📋 Word-level Confidence Analysis"):
+        df_w = pd.DataFrame(words).sort_values(
+            "confidence",
+            ascending=False
+        )
+
+        styled = (
+            df_w.style
+            .background_gradient(
+                subset=["confidence"],
+                cmap="RdYlGn"
+            )
+        )
+
+        st.write(styled)
 
         # Export
         st.markdown("<br>", unsafe_allow_html=True)
