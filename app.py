@@ -350,24 +350,20 @@ with t1:
 
         # Word confidence table
       
-words = OCREngine.get_word_stats(data, conf_thresh)
-if words:
-    with st.expander("📋 Word-level Confidence Analysis"):
-        df_w = pd.DataFrame(words).sort_values(
-            "confidence",
-            ascending=False
-        )
+              # Word confidence table
+        words = OCREngine.get_word_stats(data, conf_thresh)
+        if words:
+            with st.expander("📋 Word-level Confidence Analysis"):
+                df_w = pd.DataFrame(words).sort_values(
+                    "confidence",
+                    ascending=False
+                )
 
-        styled = (
-            df_w.style
-            .background_gradient(
-                subset=["confidence"],
-                cmap="RdYlGn"
-            )
-        )
-
-        st.write(styled)
-
+                st.dataframe(
+                    df_w,
+                    use_container_width=True,
+                    height=260,
+                )
         # Export
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div class="sec-title">Export</div>', unsafe_allow_html=True)
