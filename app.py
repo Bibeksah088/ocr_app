@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 import cv2
 import numpy as np
 from PIL import Image
@@ -684,3 +685,153 @@ with t5:
             if st.button("🗑️ Clear Session History", use_container_width=True):
                 st.session_state["history"] = []
                 st.rerun()
+
+
+with t6:
+    st.markdown('<div class="sec-title">🎙️ Speech to Text</div>', unsafe_allow_html=True)
+
+    sl1, sl2 = st.columns([1, 2])
+
+    with sl1:
+        st.markdown('<div class="sec-title">Settings</div>', unsafe_allow_html=True)
+
+        stt_lang_name = st.selectbox(
+            "🌐 Speech Language",
+            list(config.SPEECH_LANGS.keys()),
+            key="stt_lang"
+        )
+        stt_lang = config.SPEECH_LANGS[stt_lang_name]
+
+        lang_flags = {"English": "🇺🇸", "Hindi": "🇮🇳", "German": "🇩🇪", "French": "🇫🇷", "Spanish": "🇪🇸"}
+        flag = lang_flags.get(stt_lang_name, "🌐")
+        st.markdown(f"""
+        <div style="background:#0c0c1a;border:1px solid #1a1a30;border-radius:10px;
+        padding:0.8rem;text-align:center;font-size:2rem;margin:0.5rem 0">
+            {flag}
+            <div style="font-size:0.8rem;color:#a78bfa;font-weight:700;margin-top:0.3rem">{stt_lang_name}</div>
+            <div style="font-size:0.7rem;color:#6b7280">{stt_lang}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        stt_mode = st.radio("Input Method", ["🎙️ Live Record", "📁 Upload Audio File"], key="stt_mode")
+
+        st.markdown("""
+        <div class="speech-box">
+            <b style="color:#f472b6">Tips for best accuracy</b><br>
+            · Speak clearly in a quiet room<br>
+            · Hold mic 15–30 cm from mouth<br>
+            · Speak at normal speed<br>
+            · Needs internet (Google API)
+        </div>
+        """, unsafe_allow_html=True)
+
+    with sl2:
+        if stt_mode == "🎙️ Live Record":
+            st.warning(
+                "🎙️ Live recording is experimental. If recording fails, use Upload Audio File."
+            )
+            st.markdown('<div class="info-box">Click <b>Start Recording</b>, speak, then click <b>Stop Recording</b>. Results appear automatically.</div>', unsafe_allow_html=True)
+
+            try:
+                from streamlit_mic_recorder import mic_recorder
+
+                audio = mic_recorder(
+                    start_prompt="⏺  Start Recording",
+                    stop_prompt="⏹  Stop Recording",
+                    just_once=True,
+                    use_container_width=True,
+                    key="speech_mic"
+                )
+
+                if audio and audio.get("bytes"):
+                    if "prev_mic_bytes" not in st.session_state or st.session_state.prev_mic_bytes != audio["bytes"]:
+                        st.session_state.prev_mic_bytes = audio["bytes"]
+                        with st.spinner(f"Transcribing in {stt_lang_name}…"):
+                            stt_text, stt_err = SpeechEngine.transcribe_bytes(audio["bytes"], stt_lang)
+                            st.session_state.live_stt_text = stt_text
+                            st.session_state.live_stt_err = stt_err
+                            if not stt_err:
+                                add_history(f"Speech ({stt_lang_name})", stt_lang_name, "Speech Recognition", "Google STT", len(stt_text.split()), len(stt_text), "N/A")
+
+                    if st.session_state.get("live_stt_err"):
+                        st.error(f"❌ {st.session_state.live_stt_err}")
+                    elif "live_stt_text" in st.session_state:
+                        text_output = st.session_state.live_stt_text
+                        st.markdown('<div class="sec-title">Transcribed Text</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="result-box">{text_output}</div>', unsafe_allow_html=True)
+
+                        sm1, sm2, sm3 = st.columns(3)
+                        with sm1: st.markdown(metric_card(len(text_output.split()), "Words", "c-sp"), unsafe_allow_html=True)
+                        with sm2: st.markdown(metric_card(len(text_output), "Characters", "c-sp"), unsafe_allow_html=True)
+                        with sm3: st.markdown(metric_card(flag, stt_lang_name), unsafe_allow_html=True)
+
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        sd1, sd2 = st.columns(2)
+                        with sd1:
+                            st.download_button("📄 Download TXT", text_output.encode("utf-8"), "speech_transcript.txt", "text/plain", use_container_width=True)
+                        with sd2:
+                            pdf_s = Exporter.to_pdf_bytes(text_output, {
+                                "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "confidence": "Google STT",
+                                "lang": stt_lang_name,
+                                "preprocess": "Speech Recognition",
+                                "words": len(text_output.split()),
+                            })
+                            if pdf_s:
+                                st.download_button("📑 Download PDF", pdf_s, "speech_transcript.pdf", "application/pdf", use_container_width=True)
+
+            except ImportError:
+                st.error("streamlit-mic-recorder not installed.")
+                st.code("pip install streamlit-mic-recorder", language="bash")
+
+        else:
+            st.markdown('<div class="info-box">Upload a <b>WAV</b> or <b>FLAC</b> audio file. Record using your phone Voice Memo app and transfer the file.</div>', unsafe_allow_html=True)
+
+            audio_up = st.file_uploader(
+                "Upload WAV or FLAC",
+                type=["wav", "flac"],
+                label_visibility="collapsed",
+                key="audio_upload"
+            )
+
+            if audio_up:
+                st.audio(audio_up, format="audio/wav")
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                if st.button("🎯 Transcribe Audio", use_container_width=True):
+                    with st.spinner(f"Transcribing in {stt_lang_name}…"):
+                        stt_text_u, stt_err_u = SpeechEngine.transcribe_file(
+                            audio_up,
+                            stt_lang
+                        )
+                        st.session_state.file_stt_text = stt_text_u
+                        st.session_state.file_stt_err = stt_err_u
+                        if not stt_err_u:
+                            add_history(audio_up.name, stt_lang_name, "Speech Recognition", "Google STT", len(stt_text_u.split()), len(stt_text_u), "N/A")
+
+                if st.session_state.get("file_stt_err"):
+                    st.error(f"❌ {st.session_state.file_stt_err}")
+                elif "file_stt_text" in st.session_state:
+                    file_text = st.session_state.file_stt_text
+                    st.markdown('<div class="sec-title">Transcribed Text</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="result-box">{file_text}</div>', unsafe_allow_html=True)
+
+                    um1, um2 = st.columns(2)
+                    with um1: st.markdown(metric_card(len(file_text.split()), "Words", "c-sp"), unsafe_allow_html=True)
+                    with um2: st.markdown(metric_card(len(file_text), "Characters", "c-sp"), unsafe_allow_html=True)
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    ud1, ud2 = st.columns(2)
+                    with ud1:
+                        st.download_button("📄 Download TXT", file_text.encode("utf-8"), "transcript.txt", "text/plain", use_container_width=True)
+                    with ud2:
+                        pdf_u = Exporter.to_pdf_bytes(file_text, {
+                            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "confidence": "Google STT",
+                            "lang": stt_lang_name,
+                            "preprocess": "Speech Recognition",
+                            "words": len(file_text.split()),
+                        })
+                        if pdf_u:
+                            st.download_button("📑 Download PDF", pdf_u, "transcript.pdf", "application/pdf", use_container_width=True)
