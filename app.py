@@ -688,6 +688,10 @@ with t5:
                 st.session_state["history"] = []
                 st.rerun()
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 5 — SPEECH TO TEXT
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 with t6:
     st.markdown('<div class="sec-title">🎙️ Speech to Text</div>', unsafe_allow_html=True)
