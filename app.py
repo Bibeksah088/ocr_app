@@ -285,6 +285,8 @@ t1, t2, t3, t4, t5 = st.tabs([
     "📦  Batch Process",
     "🔍  Compare Modes",
     "📊  Analytics",
+    "🎙️  Speech to Text",
+    
 ])
 
 # ─────────────────────────────────────────────────────────────────────────────
