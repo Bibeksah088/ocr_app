@@ -57,8 +57,9 @@ class ImagePreprocessor:
 
     @staticmethod
     def contrast_enhance(img):
-        pil = ImagePreprocessor._to_pil(img) if not isinstance(img, Image.Image) else img
-        enhanced = ImageEnhance.Contrast(pil).enhance(2.0)
+        if not isinstance(img, Image.Image):
+            img = ImagePreprocessor._to_pil(img)
+        enhanced = ImageEnhance.Contrast(img).enhance(2.0)
         return ImagePreprocessor._to_cv2(enhanced)
 
     @staticmethod
@@ -97,20 +98,19 @@ class ImagePreprocessor:
         t = cv2.morphologyEx(t, cv2.MORPH_CLOSE, kern)
         return cv2.cvtColor(t, cv2.COLOR_GRAY2BGR)
 
-    _MAP = {
-        "None (Original)": none_mode,
-        "Grayscale": grayscale,
-        "Adaptive Threshold": adaptive_threshold,
-        "OTSU Threshold": otsu_threshold,
-        "Denoise": denoise,
-        "Sharpen": sharpen,
-        "Contrast Enhance": contrast_enhance,
-        "Deskew": deskew,
-        "Full Pipeline (Recommended)": full_pipeline,
-    }
-
     @classmethod
     def process(cls, img, mode):
-        fn = cls._MAP.get(mode, cls.none_mode)
+        modes = {
+            "None (Original)":             cls.none_mode,
+            "Grayscale":                   cls.grayscale,
+            "Adaptive Threshold":          cls.adaptive_threshold,
+            "OTSU Threshold":              cls.otsu_threshold,
+            "Denoise":                     cls.denoise,
+            "Sharpen":                     cls.sharpen,
+            "Contrast Enhance":            cls.contrast_enhance,
+            "Deskew":                      cls.deskew,
+            "Full Pipeline (Recommended)": cls.full_pipeline,
+        }
+        fn = modes.get(mode, cls.none_mode)
         result = fn(img)
         return cls._to_pil(result)
