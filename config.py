@@ -37,3 +37,12 @@ PREPROCESS_MODES = [
     "Deskew",
     "Full Pipeline (Recommended)",
 ]
+
+SPEECH_LANGS = {
+    "English": "en-US",
+    "Hindi": "hi-IN",
+    "German": "de-DE",
+    "French": "fr-FR",
+    "Spanish": "es-ES",
+}
+
